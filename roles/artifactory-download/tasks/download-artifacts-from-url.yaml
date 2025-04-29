@@ -1,0 +1,67 @@
+# tasks file for artifactory-download
+
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: '{{ artifactory_folder }}{{ robin_version }}'
+    state: directory
+    mode: '0755'
+
+- name: Check if host and k8s script exists
+  stat:
+    path: '{{ artifactory_folder }}{{ robin_version }}/{{ item }}-{{ os_version }}-{{ robin_version }}.sh'
+  loop:
+    - host-script
+    - k8s-script
+  register: host_script_stat
+
+- name: Download host and k8s scripts
+  get_url:
+    url: '{{ artifactory_url }}{{ item }}-{{ os_version }}-{{ robin_version }}.sh'
+    dest: '{{ artifactory_folder }}{{ robin_version }}/{{ item }}-{{ os_version }}-{{ robin_version }}.sh'
+  when: not host_script_stat.results[ index ].stat.exists
+  loop:
+    - host-script
+    - k8s-script
+  loop_control:
+    index_var: index
+
+- name: Check if k8splus and robin scripts exist
+  stat:
+    path: '{{ artifactory_folder }}{{ robin_version }}/{{ item }}-{{ robin_version }}.sh'
+  register: k8plus_script_stat
+  loop:
+    - k8splus-script
+    - robin-script
+
+- name: Download k8splus and robin scripts
+  get_url:
+    url: '{{ artifactory_url }}{{ item }}-{{ robin_version }}.sh'
+    dest: '{{ artifactory_folder }}{{ robin_version }}/{{ item }}-{{ robin_version }}.sh'
+  when: not k8plus_script_stat.results[ index ].stat.exists
+  loop:
+    - k8splus-script
+    - robin-script
+  loop_control:
+    index_var: index
+
+- name: Check if k8s and robin images exist
+  stat:
+    path: '{{ artifactory_folder }}{{ robin_version }}/{{ item }}-{{ robin_version }}.tar.gz'
+  loop:
+    - k8s-images
+    - robinbinimg
+  register: images_stat
+
+- name: Download k8s and robin Images
+  get_url:
+    url: '{{ artifactory_url }}{{ item }}-{{ robin_version }}.tar.gz'
+    dest: '{{ artifactory_folder }}{{ robin_version }}/{{ item }}-{{ robin_version }}.tar.gz'
+  when: not images_stat.results[ index ].stat.exists
+  loop:
+    - k8s-images
+    - robinbinimg
+  loop_control:
+    index_var: index
+
+- name: give permission to binary
+  shell: chmod -R +x {{ artifactory_folder }}{{ robin_version }}

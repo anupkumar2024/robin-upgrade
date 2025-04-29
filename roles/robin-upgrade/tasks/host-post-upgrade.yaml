@@ -1,0 +1,6 @@
+- name: Host Post upgrade
+  shell: cd /root/build/{{ robin_version }} && ./host-script-{{ os_version }}-{{ robin_version }}.sh post-upgrade --host-type=physical --yes --silent --force --ip-protocol={{ ip_protocol }}
+  args:
+    executable: /bin/bash
+  async: 3600
+  poll: 60

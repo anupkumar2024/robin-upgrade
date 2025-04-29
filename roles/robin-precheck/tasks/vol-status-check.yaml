@@ -1,0 +1,24 @@
+- name:  Fetch robin volume status
+  shell: | 
+    source /root/.bash_profile && robin login {{ robin_user }} --password {{ robin_pass }} >/dev/null
+    robin volume list --headers status
+  args:
+    executable: /bin/bash  
+  register: robin_vol_output
+
+
+- name: Capture volume status
+  set_fact: 
+    robin_vol_status: "{{ robin_vol_output.stdout_lines | map('trim') | select('eq', 'ONLINE') | list | length == robin_vol_output.stdout_lines | length }}"
+
+
+- name: robin volume degraded
+  fail:
+    msg: "volumess are in degraded status. Please check before proceeding"
+  when: not robin_vol_status
+  ignore_errors: yes
+
+- name: robin disks online
+  debug:
+    msg: "All Volumes associated are online"
+  when: robin_vol_status  

@@ -1,0 +1,64 @@
+- name: Import host upgrade
+  import_tasks: host-upgrade.yaml
+
+
+- name: Import k8s upgrade
+  import_tasks: k8s-upgrade.yaml
+
+
+- set_fact:
+    current_major_version_only: "{{ current_release_major_version | regex_replace('\\.\\d+$', '') | float }}"
+
+- name: debug current major version
+  debug:
+    msg: "{{ current_major_version_only }}"
+
+- set_fact:
+    upgrade_major_version_only: "{{ upgrade_release_major_version | regex_replace('\\.\\d+$', '') | float }}"
+
+- name: debug upgrade major version
+  debug:
+    msg: "{{ upgrade_major_version_only }}"
+
+
+
+# Set k8s_versions based on robin versions
+- set_fact:
+    k8s_versions: "{{ v53_to_vhf3_chain_upgrade_k8s_versions }}"
+  when: current_major_version_only | float  >= 5.3 and current_major_version_only | float < 5.4
+ 
+
+# Set k8s_versions based on robin versions
+- set_fact:
+    k8s_versions: "{{ v543hf3_to_vhf5_chain_upgrade_k8s_versions }}"
+  when: current_robin_version  == '5.4.3-355'
+ 
+
+# Set k8s_versions based on robin versions
+- set_fact:
+    k8s_versions: "{{ v543hf5_to_v550_chain_upgrade_k8s_versions }}"
+  when: current_major_version_only | float >= 5.4
+ 
+
+
+- name: Include k8s chain upgrade
+  include_tasks: k8s-chain-upgrade.yaml
+  loop: "{{ k8s_versions }}"
+  loop_control:
+    loop_var: k8s_version
+  when: current_major_version_only | float <= 5.5 and build | int < 1841
+
+- name: Include k8s chain upgrade
+  include_tasks: k8s-chain-upgrade-1841.yaml
+  loop: "{{ k8s_versions }}"
+  loop_control:
+    loop_var: k8s_version
+  when: upgrade_major_version_only | float >= 5.5 and build | int >= 1841
+
+
+- name: Import k8s plus upgrade
+  import_tasks: k8s-plus-upgrade.yaml
+
+
+- name: Import robin upgrade
+  import_tasks: robin-upgrade.yaml

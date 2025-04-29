@@ -1,0 +1,16 @@
+---
+# tasks file for post-upgrade-tasks
+
+- name: Import post upgrade tasks
+  import_tasks: post-upgrade-tasks.yaml
+  tags: post-check
+  
+
+- name: Import nodes status check
+  import_tasks: roles/robin-precheck/tasks/node-status-check.yaml
+  tags: post-check  
+
+
+- name: Import extra checks
+  import_tasks: roles/robin-precheck/tasks/extra-checks.yaml
+  tags: post-check

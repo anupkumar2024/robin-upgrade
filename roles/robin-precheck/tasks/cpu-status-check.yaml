@@ -1,0 +1,13 @@
+- name: tranfer cpu check script
+  copy:
+    src: cpu_check.py
+    dest: /tmp/cpu_check.py
+
+- name: Execute cpu check
+  shell: chmod +x /tmp/cpu_check.py && /tmp/cpu_check.py
+  register: cpu_output
+
+- name: CPU stats  
+  debug:
+    msg: "{{ cpu_output.stdout }}"
+        

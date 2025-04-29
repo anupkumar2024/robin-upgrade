@@ -1,0 +1,12 @@
+---
+# vars file for robin-precheck
+
+paths_to_check:
+  - name: /var/lib/docker
+    min_space_gb: 100
+  - name: /etc/kubernetes
+    min_space_gb: 50
+  - name: /home/robinds/var/crash
+    min_space_gb: 30
+  - name: /
+    min_space_gb: 100

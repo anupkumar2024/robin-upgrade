@@ -1,0 +1,12 @@
+- name: Fetch nfs monitor schedule status
+  shell: source /root/.bash_profile && robin schedule list --function Monitor --headers Enabled
+  args:
+      executable: /bin/bash
+  register: nfs_server_monitor
+
+- name: verify if NFS server monitor schdule is disabled
+  assert:
+    that: nfs_server_monitor.stdout == 'False'
+    fail_msg: "Disable NFS server monitor before proceeding."
+    success_msg: "Passed"
+   

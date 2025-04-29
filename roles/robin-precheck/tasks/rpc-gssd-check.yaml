@@ -1,0 +1,20 @@
+- name: Fetch rpc-gssd service status
+  shell: systemctl status rpc-gssd | egrep 'inactive|disabled' >/dev/null
+  register: rpc_service_output
+
+- name: Capture rpc-gssd service status
+  set_fact: 
+    rpc_inactive: "{{ rpc_service_output.stdout_lines | length == 0 }}"
+    rpc_active: "{{ rpc_service_output.stdout_lines | length != 0 }}"
+
+- name: check rpc-gssd service status
+  debug:
+    msg: "rpc-gssd service is inactive and disabled"
+  when: rpc_inactive
+
+- name: rpc-gssd service not running
+  fail:
+    msg: "rpc-gssd service is active and running. Please stop abd disable before proceeding"
+  when: rpc_active  
+  ignore_errors: yes    
+  

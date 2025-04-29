@@ -1,0 +1,51 @@
+  - name: Fetch host services status
+    shell: |
+      source /root/.bash_profile
+      robin login {{ robin_user }} --password {{ robin_pass }} >/dev/null
+      robin host list --services
+    args:
+      executable: /bin/bash
+    register: host_services_output
+
+  - name: Fetch robin manager services status
+    shell: |
+      source /root/.bash_profile
+      robin login {{ robin_user }} --password {{ robin_pass }} >/dev/null
+      robin manager list --services 
+    args:
+      executable: /bin/bash
+    register: manager_services_output
+
+  - name: Parse host services status
+    set_fact:
+      host_services_status: "{{ host_services_output.stdout | regex_findall('\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|') }}"
+
+  - name: Parse robin manager services status
+    set_fact:
+      manager_services_status: "{{ manager_services_output.stdout | regex_findall('\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|\\s+(UP|DOWN)\\s+\\|') }}"
+
+  - name: all host services are up
+    set_fact:
+      all_host_services_up: "{{ host_services_status | map('regex_search', 'UP') | list | length == host_services_status | length * 4 }}"
+
+  - name: Check if all manager services are up
+    set_fact:
+      all_manager_services_up: "{{ manager_services_status | map('regex_search', 'UP') | list | length == manager_services_status | length * 12 }}"
+
+  - name: any host service is not up
+    fail:
+      msg: "One or more host services are not up: {{ host_services_status }}"
+    when: not all_host_services_up
+    ignore_errors: yes
+
+  - name: any manager service is not up
+    fail:
+      msg: "One or more manager services are not up: {{ manager_services_status }}"
+    when: not all_manager_services_up
+    ignore_errors: yes
+
+  - name: msg
+    debug:
+      msg: "All host and manager services are up."
+    when: all_host_services_up and all_manager_services_up
+    

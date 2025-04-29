@@ -1,0 +1,17 @@
+- name: transfer db check script
+  copy:
+    src: check_robindb.sh
+    dest: /tmp/check_robindb.sh
+
+- name: run db check script
+  ansible.builtin.shell: chmod +x /tmp/check_robindb.sh && /tmp/check_robindb.sh
+  register: query_output
+
+
+- name: verify column 'use_ssl' exists in the 'ldap_servers' table and value set to false
+  assert:
+    that: query_output.rc == 0
+    fail_msg: "Add colunm use_ssl and add value to false before proceeding.[main-host]# rbash master 
+          [robinmaster@master ~]# rsql robin
+          robin=# alter table ldap_servers ADD COLUMN use_ssl BOOLEAN NOT NULL DEFAULT FALSE;"
+    success_msg: "passed"

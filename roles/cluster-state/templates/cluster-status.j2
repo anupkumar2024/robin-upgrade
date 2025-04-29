@@ -1,0 +1,39 @@
+#!/bin/bash
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+result_path={{ artifactory_folder }}{{ robin_version }}/output/$1
+robin login {{ robin_user }} --password {{ robin_pass }}
+mkdir -p $result_path
+
+
+## capture k8s states
+kubectl get pv  > $result_path/k8s_pv
+kubectl get node > $result_path/k8s_node
+kubectl get pvc -A > $result_path/k8s_pvc
+kubectl get sc > $result_path/k8s_sc
+kubectl get pods -A -o wide > $result_path/k8s_pods
+kubectl get cm -n robino > $result_path/k8s_cm_robinns
+kubectl get secrets -n robinio > $result_path/k8s_secrets_robinns
+kubectl get cm -n kube-system > $result_path/k8s_cm_kubesystem
+kubectl get secrets -n kube-system > $result_path/k8s_secrets_kubesystem
+
+## capture robin states
+robin volume list > $result_path/robin_volume
+robin disk list > $result_path/robin_disk
+robin app list > $result_path/robin_app
+robin host list --services > $result_path/robin_services
+robin manager list --services > $result_path/robin_rcm_services
+robin host list --network > $result_path/robin_networks
+robin host list > $result_path/robin_host
+robin collection list > $result_path/robin_collection
+robin bundle list > $result_path/robin_bundle
+
+
+if [[ "$1" == "pre_upgrade" ]] || [[ "$1" == "post_upgrade" ]]; then
+    kubectl get pods -A -o yaml > $result_path/k8s_pods.yaml
+    kubectl get pvc -A > $result_path/k8s_pvc
+    kubectl get pvc -A -o yaml > $result_path/k8s_pvc.yaml
+    kubectl get deployment -A -o yaml > $result_path/k8s_deployment.yaml
+    kubectl get sts -A -o yaml > $result_path/k8s_sts.yaml
+    kubectl get ds -A -o yaml > $result_path/k8s_ds.yaml
+    robin version > $result_path/robin_version
+fi

@@ -1,0 +1,11 @@
+- name: get suicide threshold
+  shell: source /root/.bash_profile && robin config list agent suicide_threshold --headers Value
+  args:
+      executable: /bin/bash
+  register: suicide_threshold
+
+- name: verify if suicide threshold set to 1800
+  assert:
+    that: suicide_threshold.stdout == '1800'
+    fail_msg: "Update suicide threshold to 1800 before proceeding. run robin config update agent suicide_threshold 1800"
+    success_msg: "passed"

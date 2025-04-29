@@ -1,0 +1,27 @@
+- name: K8s Upgrade on master 1
+  shell: cd /root/build/{{ robin_version }} && ./k8s-script-{{ os_version }}-{{ robin_version }}.sh upgrade --kubeconfig=/root/kube.config --primary-cp-node  --host-type=physical --yes --force --silent --ip-protocol={{ ip_protocol }}
+  async: 3600
+  poll: 60
+  when: inventory_hostname in groups['primary-master'][0]
+  tags: [v5.4hf3, v5.4hf5]
+
+- name: K8s Upgrade on master 2
+  shell: cd /root/build/{{ robin_version }} && ./k8s-script-{{ os_version }}-{{ robin_version }}.sh upgrade --kubeconfig=/root/kube.config --host-type=physical --yes --force --silent --ip-protocol={{ ip_protocol }}
+  async: 3600
+  poll: 60
+  when: inventory_hostname in groups['secondary-master'][0]
+  tags: [v5.4hf3, v5.4hf5]
+
+- name: K8s Upgrade on  master 3
+  shell: cd /root/build/{{ robin_version }} && ./k8s-script-{{ os_version }}-{{ robin_version }}.sh upgrade --kubeconfig=/root/kube.config --host-type=physical --yes --force --silent --ip-protocol={{ ip_protocol }}
+  async: 3600
+  poll: 60
+  when: inventory_hostname in groups['secondary-master'][1]
+  tags: [v5.4hf3, v5.4hf5]
+
+- name: K8s Upgrade on worker nodes
+  shell: cd /root/build/{{ robin_version }} && ./k8s-script-{{ os_version }}-{{ robin_version }}.sh upgrade --kubeconfig=/root/kube.config --host-type=physical --yes --force --silent --ip-protocol={{ ip_protocol }}
+  async: 3600
+  poll: 60
+  when: inventory_hostname not in groups['primary-master'] and inventory_hostname not in groups['secondary-master']
+  tags: [v5.4hf3, v5.4hf5]

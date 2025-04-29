@@ -1,0 +1,10 @@
+- name: Generate cluster state capture script to master node
+  template:
+    src: cluster-status.j2
+    dest: /tmp/cluster_status.sh
+
+- name: Capture cluster state
+  shell: chmod +x /tmp/cluster_status.sh && /tmp/cluster_status.sh {{ task }}
+  args:
+    executable: /bin/bash
+  ignore_errors: yes

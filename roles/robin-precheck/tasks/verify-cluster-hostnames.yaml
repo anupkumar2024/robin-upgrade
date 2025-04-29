@@ -1,0 +1,48 @@
+- name: Fetch master nodes from cluster
+  shell: "kubectl get nodes | grep control | awk '{print $1}'"
+  args:
+    executable: /bin/bash
+  register: master_nodes
+
+- name: Fetch worker nodes from cluster
+  shell: "kubectl get nodes | grep -v control | awk 'NR>1 {print $1}'"
+  args:
+    executable: /bin/bash
+  register: worker_nodes
+
+- name: Fetch primary master from cluster
+  shell: |
+    source /root/.bash_profile
+    robin login {{ robin_user}} --password {{ robin_pass }} >/dev/null 
+    robin manager list | grep -v standby | awk 'NR>3 {print $8}'
+  args:
+    executable: /bin/bash
+  register: primary_master 
+
+- name: debug
+  debug:
+    msg: "{{ master_nodes.stdout_lines }} and {{ worker_nodes.stdout_lines }} and {{ primary_master.stdout_lines }}"
+
+- name: verify if master nodes matching inventory host file
+  assert:
+    that:
+      - item in groups['master']
+    fail_msg: "master nodes not matching: NOK"
+    success_msg: "master nodes matching: OK"  
+  loop: "{{ master_nodes.stdout_lines }}"
+
+- name: verify if worker nodes matching inventory host file
+  assert:
+    that:
+      - item in groups['worker']
+    fail_msg: "worker nodes not matching: NOK"
+    success_msg: "worker nodes matching: OK"  
+  loop: "{{ worker_nodes.stdout_lines }}"         
+
+- name: verify if primary master node matching inventory host file
+  assert:
+    that:
+      - item in groups['primary-master']
+    fail_msg: " primary master node not matching: NOK"
+    success_msg: "primary master node matching: OK"  
+  loop: "{{ primary_master.stdout_lines }}"  

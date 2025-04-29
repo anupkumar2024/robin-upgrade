@@ -1,0 +1,34 @@
+---
+# change the build version and correct version in artifactory url to upgrade or download binaries
+
+artifactory_url: http://builds.robinsystems.com:8080/job/Robin_5.5.0_Binary/1852/artifact/artifacts/
+build: 1852
+robin_version: 5.5.0-1852 #used for upgrade and download robin binaries
+os_version: el8 
+artifactory_folder: /root/build/
+robin_user: admin
+robin_pass: Robin123
+ip_protocol: ipv4
+ansible_user: anupkumar
+task: pre_upgrade  # can be values pre_upgrade,post_upgrade for running ansible role cluster-state  
+current_robin_version: 5.4.3-1841
+upgrade_release_major_version: 5.5.0
+current_release_major_version: 5.5.0 
+v53_to_vhf3_chain_upgrade_k8s_versions:
+  - 1.22.5
+  - 1.23.8
+  - 1.24.8
+  - 1.25.7
+v543hf3_to_vhf5_chain_upgrade_k8s_versions: 
+  - 1.25.7
+  - 1.26.0
+v543hf5_to_v550_chain_upgrade_k8s_versions:
+  - 1.26.0
+  - 1.27.9
+  - 1.28.5
+  - 1.29.0
+  - 1.30.9
+  - 1.31.6
+
+
+

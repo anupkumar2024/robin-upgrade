@@ -1,0 +1,23 @@
+- name: Robin Pre upgrade
+  shell: | 
+    source /root/.bashrc
+    cd /root/build/{{ robin_version }} 
+    ./robin-script-{{ robin_version }}.sh pre-upgrade --yes --force --username={{ robin_user }} --password={{ robin_pass }} --silent --ip-protocol={{ ip_protocol }}
+  args:
+    executable: /bin/bash
+  async: 3600
+  poll: 60
+  when: inventory_hostname in groups['primary-master'][0] and upgrade_release_major_version == '5.4.3'
+  tags: [v5.4hf3,v5.4hf5]
+
+- name: Robin Pre upgrade
+  shell: |
+    source /root/.bashrc
+    cd /root/build/{{ robin_version }}
+    ./robin-script-{{ robin_version }}.sh pre-upgrade --yes --force --username={{ robin_user }} --password={{ robin_pass }} --silent 
+  args:
+    executable: /bin/bash
+  async: 3600
+  poll: 60
+  when: inventory_hostname in groups['primary-master'][0] and upgrade_release_major_version == '5.5.0'
+  tags: [v5.4hf3,v5.4hf5]

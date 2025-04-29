@@ -1,0 +1,14 @@
+- name: Fetch auto disk rebalance status
+  shell: |
+    source /root/.bash_profile && robin login {{ robin_user }} --password {{ robin_pass }} >/dev/null
+    robin config list server disk_used_space_high_watermark --headers Value
+  args:
+    executable: /bin/bash  
+  register: high_water_mark
+
+
+- name: Verify if auto disk rebalance is disabled
+  assert:
+    that: high_water_mark.stdout | int > 100
+    fail_msg: "auto disk rebalance is not disabled. Disable it before proceeding"
+    success_msg: "passed"

@@ -1,0 +1,28 @@
+- name: Fetch pod status in kube-system namespace
+  shell: kubectl get pods -n kube-system --no-headers -o custom-columns=STATUS:.status.phase
+  register: k8s_pod_status_output
+
+- name: Fetch pod status in robinio namespace
+  shell: kubectl get pods -n robinio --no-headers -o custom-columns=STATUS:.status.phase
+  register: robin_pod_status_output
+
+- name: Parse pod status
+  set_fact:
+    pod_statuses_k8s: "{{ k8s_pod_status_output.stdout.split('\n') }}"
+    pod_statuses_robin: "{{ robin_pod_status_output.stdout.split('\n') }}"
+
+- name: Capture pod status
+  set_fact:
+    all_k8s_pod_running: "{{ pod_statuses_k8s | map('trim') | select('eq', 'Running') | length == pod_statuses_k8s | length }}"
+    all_robin_pod_running: "{{ pod_statuses_robin | map('trim') | select('eq', 'Running') | length == pod_statuses_robin | length }}"
+
+- name: Pod not running
+  fail:
+    msg: "One or more pods are not running."
+  when: not all_k8s_pod_running and not all_robin_pod_running
+  ignore_errors: yes
+
+- name: success 
+  debug:
+    msg: "All pods in kube-system and robinio namespace are running."
+  when: all_k8s_pod_running and all_robin_pod_running

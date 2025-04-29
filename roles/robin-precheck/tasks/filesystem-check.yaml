@@ -1,0 +1,45 @@
+---
+- name: File system check block
+  tags: precheck
+  block:
+  - name: Get hostname
+    command: "hostname"
+    register: hostname_result
+
+  - name: Perform DNS lookup for the local host
+    command: "nslookup {{ hostname_result.stdout }}"
+    register: dns_result
+    failed_when: dns_result.rc != 0  # Fail if the return code is not 0
+
+  - name: Loop through paths and check available space
+    debug:
+      msg: "Checking available space in {{ item.name }}"
+    loop: "{{ paths_to_check }}"
+    loop_control:
+      loop_var: item
+
+  - name: Get available space for each path
+    ansible.builtin.shell: "df -k {{ path.name }} | tail -n 1"
+    loop: "{{ paths_to_check }}"
+    loop_control:
+      loop_var: path
+    register: df_outputs
+
+  - name: Parse df output and check space
+    set_fact:
+      available_space_gb: "{{ (item.stdout.split()[3] | int) / 1024 / 1024 }}"
+    loop: "{{ df_outputs.results }}"
+    loop_control:
+      loop_var: item
+    when: item.stdout is defined
+
+  - name: Check if available space meets requirements
+    assert:
+      that:
+        - available_space_gb | int >= path.min_space_gb
+      fail_msg: "Not enough space in {{ path.name }} ({{ available_space_gb }}GB available)"
+      success_msg: "Sufficient space available in {{ path.name }} ({{ available_space_gb }}GB)"
+    loop: "{{ paths_to_check }}"
+    loop_control:
+      loop_var: path
+    when: available_space_gb is defined

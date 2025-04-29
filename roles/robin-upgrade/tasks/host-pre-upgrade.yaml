@@ -1,0 +1,6 @@
+- name: Host Pre Upgrade
+  shell: cd /root/build/{{ robin_version }} && ./host-script-{{os_version}}-{{ robin_version }}.sh pre-upgrade  --robin-image-archive=/root/build/{{ robin_version }}/robinbinimg-{{ robin_version }}.tar.gz --k8s-image-archive=/root/build/{{ robin_version }}/k8s-images-{{ robin_version }}.tar.gz --host-type=physical --yes --force --silent --ip-protocol={{ ip_protocol }}
+  args:
+    executable: /bin/bash
+  async: 3600
+  poll: 60

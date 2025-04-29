@@ -1,0 +1,35 @@
+- name: Fetch Kubernetes nodes status
+  shell: kubectl get nodes | awk 'NR>1 {print $2}'
+  register: k8s_output
+  when: inventory_hostname in groups['primary-master']
+
+- name: Fetch robin hosts status
+  shell: source /root/.bash_profile && robin login {{ robin_user}} --password {{ robin_pass }} >/dev/null && robin host list --headers status
+  args:
+    executable: /bin/bash
+  register: robin_host_output
+  when: inventory_hostname in groups['primary-master']
+
+- name: Parse and set node status
+  set_fact:
+    kubectl_node_status: "{{ k8s_output.stdout.split('\n') }}"
+    robin_host_status: "{{ robin_host_output.stdout.split('\n') }}"
+  when: inventory_hostname in groups['primary-master']  
+
+- name: Capture Node status
+  set_fact:
+    all_k8s_nodes_ready: "{{ kubectl_node_status | map('trim') | select('eq', 'Ready') | list | length == kubectl_node_status | length }}"
+    all_robin_nodes_ready: "{{ robin_host_status | map('trim') | select('eq', 'Ready') | list | length == robin_host_status | length }}"
+  when: inventory_hostname in groups['primary-master']
+
+
+- name: Not Ready status
+  fail:
+    msg: "NOK. Robin Hosts: {{ robin_host_status }} K8s Nodes: {{ kubectl_node_status }}"
+  when: inventory_hostname in groups['primary-master'] and (not all_k8s_nodes_ready or not all_robin_nodes_ready)
+
+
+- name: Ready status
+  debug:
+    msg: "OK."
+  when: inventory_hostname in groups['primary-master'] and all_k8s_nodes_ready and all_robin_nodes_ready

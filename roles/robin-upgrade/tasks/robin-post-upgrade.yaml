@@ -1,0 +1,69 @@
+- name: Robin Post upgrade
+  shell: |
+    source /root/.bashrc
+    cd /root/build/{{ robin_version }}
+    ./robin-script-{{ robin_version }}.sh post-upgrade --yes --force --username={{ robin_user }} --password={{ robin_pass }} --silent --ip-protocol={{ ip_protocol }}
+  args:
+    executable: /bin/bash
+  async: 3600
+  poll: 60
+  when: inventory_hostname in groups['primary-master'][0] and upgrade_release_major_version == '5.4.3'
+  tags: [v5.4hf3]
+
+- name: Robin Post upgrade
+  shell: |
+    source /root/.bashrc
+    cd /root/build/{{ robin_version }}
+    ./robin-script-{{ robin_version }}.sh post-upgrade --yes --force --username={{ robin_user }} --password={{ robin_pass }} --silent 
+  args:
+    executable: /bin/bash
+  async: 3600
+  poll: 60
+  when: inventory_hostname in groups['primary-master'][0] and upgrade_release_major_version == '5.5.0'
+  tags: [v5.4hf3]
+
+- name: Include common tasks to find the active node
+  include_tasks: find-active-node.yaml
+  name: "robin post upgrade - active"
+  tags:
+    - v5.4hf5
+
+- name: Robin Post upgrade on Active Master
+  shell: |
+    source /root/.bashrc
+    cd /root/build/{{ robin_version }}
+    ./robin-script-{{ robin_version }}.sh post-upgrade --yes --force --username={{ robin_user }} --password={{ robin_pass }} --silent --ip-protocol={{ ip_protocol }}
+  args:
+    executable: /bin/bash
+  async: 3600
+  poll: 60
+  when: ansible_facts['fqdn'] == active_node and upgrade_release_major_version == '5.4.3'
+  tags: [v5.4hf5]
+
+- name: Robin Post upgrade on Active Master
+  shell: |
+    source /root/.bashrc
+    cd /root/build/{{ robin_version }}
+    ./robin-script-{{ robin_version }}.sh post-upgrade --yes --force --username={{ robin_user }} --password={{ robin_pass }} --silent 
+  args:
+    executable: /bin/bash
+  async: 3600
+  poll: 60
+  when: ansible_facts['fqdn'] == active_node and upgrade_release_major_version == '5.5.0'
+  tags: [v5.4hf5]
+
+- name: Get Robin upgrade status
+  shell: kubectl exec -it -n robinio $(kubectl get pods -n robinio -l app=robin-master  -o jsonpath='{.items[*].metadata.name}') -- robin upgrade status
+  register: robin_upgrade_status_output
+  args:
+    executable: /bin/bash
+  when: inventory_hostname in groups['primary-master'][0]  
+  tags: upgrade_status
+
+- name: Robin Upgrade Status
+  debug:
+    msg: "{{robin_upgrade_status_output.stdout }}"
+  tags: [get_upgrade_robin_status]
+  when: inventory_hostname in groups['primary-master'][0]
+
+ 

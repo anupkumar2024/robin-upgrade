@@ -1,0 +1,7 @@
+---
+# tasks file for roles/cluster-state
+- name: import cluster status tasks
+  import_tasks: cluster-status-task.yaml
+  tags:
+    - capture-cluster-state
+   

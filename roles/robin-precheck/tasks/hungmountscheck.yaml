@@ -1,0 +1,14 @@
+- name: fetch hungmounts
+  shell: for i in `mount|grep :/pvc|awk '{print $3}'`; do echo ====$i====; ls $i; done
+  register: hung_mounts
+
+- name: debug
+  debug:
+    msg: "Hung mounts: {{ hung_mounts.stdout_lines}}"
+    
+    
+- name: Verify hung mounts
+  assert:
+    that: hung_mounts.stdout | trim == ""
+    fail_msg: "hung mounts found. Clean it before proceeding"
+    success_msg: "no hung mounts"

@@ -1,0 +1,24 @@
+- name:  Fetch robin disk status
+  shell: | 
+    source /root/.bash_profile && robin login {{ robin_user }} --password {{ robin_pass }} >/dev/null
+    robin disk list --headers status
+  args:
+    executable: /bin/bash  
+  register: robin_disk_output
+
+
+- name: Capture disk status
+  set_fact: 
+    robin_disk_status: "{{ robin_disk_output.stdout_lines | map('trim') | select('eq', 'ONLINE') | list | length == robin_disk_output.stdout_lines | length }}"
+
+
+- name: robin disks faulty
+  fail:
+    msg: "disks are offline. Please check before proceeding"
+  when: not robin_disk_status
+  ignore_errors: yes
+
+- name: robin disks online
+  debug:
+    msg: "All Robin disks associated are online"
+  when: robin_disk_status  

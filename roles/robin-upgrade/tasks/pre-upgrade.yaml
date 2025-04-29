@@ -1,0 +1,15 @@
+
+- name: give permission to binary
+  shell: chmod -R +x {{ artifactory_folder }}{{ robin_version }}
+
+- name: Include host preupgrade
+  import_tasks: host-pre-upgrade.yaml
+  tags: [v5.4]
+
+- name: Include ks8 preupgrade
+  import_tasks: k8s-pre-upgrade.yaml
+  tags: [v5.4]
+
+- name: Include robin preupgrade
+  import_tasks: robin-pre-upgrade.yaml
+  tags: [v5.4]

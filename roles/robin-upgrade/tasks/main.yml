@@ -1,0 +1,34 @@
+---
+# tasks file for robin-upgrade
+
+- name: capture cluster state before upgrade
+  import_role:
+    name: cluster-state
+  vars:
+    task: pre_upgrade
+
+
+- name: Import preupgrade
+  import_tasks: pre-upgrade.yaml
+  tags:
+    - v5.3
+    - v5.4
+
+- name: Import upgrade
+  import_tasks: upgrade.yaml
+  tags:
+    - v5.3
+    - v5.4
+
+- name: Import Post upgrade
+  import_tasks: post-upgrade.yaml
+  tags:
+    - v5.3
+    - v5.4
+
+
+- name: capture cluster state post upgrade
+  import_role:
+    name: cluster-state
+  vars:
+    task: post_upgrade

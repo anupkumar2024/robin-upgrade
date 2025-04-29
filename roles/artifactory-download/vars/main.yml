@@ -1,0 +1,6 @@
+---
+# vars file for artifactory-download
+artifactory_url: http://builds.robinsystems.com:8080/view/5.4.x/job/Robin_5.4.3_Binary/558/artifact/artifacts/
+os_version: el8
+robin_version: 5.4.3-558
+artifactory_folder: /root/build/

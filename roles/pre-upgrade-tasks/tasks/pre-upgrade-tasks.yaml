@@ -1,0 +1,184 @@
+- name: Login to robin cluster
+  shell: /root/bin/robin login {{ robin_user  }} --password {{ robin_pass }}
+  when: inventory_hostname in groups['primary-master'][0]
+
+
+
+
+- name: Run kubelet --version command
+  shell: kubelet --version | awk '{ print $2 }'
+  register: kubelet_version
+
+- name: debug kubelet version
+  debug:
+    msg: "{{ kubelet_version.stdout }}"
+
+- name: Replace kubelet binary
+  shell: |
+    cd /tmp; curl http://artifactory.robinsystems.com/k8s_pkgs/kubelet-v1.25.7 -o kubelet
+    systemctl stop kubelet; cp /usr/bin/kubelet /usr/bin/kubelet-bkp; cp /tmp/kubelet /usr/bin/kubelet
+    systemctl start kubelet
+  args:
+    executable: /bin/bash  
+  when: kubelet_version.stdout == "v1.25.7"
+
+- name: fetch md5sum of new kublet bin
+  shell: md5sum /usr/bin/kubelet
+  register: md5sum_output
+  when: kubelet_version.stdout == "v1.25.7"
+
+- name: verify if kubelet binary updated
+  assert:
+    that: md5sum_output.stdout == "9548ca9c00768ab3f34cf973922394db"
+    fail_msg: "not updated"
+    success_msg: "updated new kublet bin"
+  when: kubelet_version.stdout == "v1.25.7"   
+
+
+
+
+- name: update suicide threshold
+  shell: source /root/.bash_profile && robin config update agent suicide_threshold 1800
+  args:
+      executable: /bin/bash
+  when: inventory_hostname in groups['primary-master']
+
+- name: get suicide threshold
+  shell: source /root/.bash_profile && robin config list agent suicide_threshold --headers Value
+  args:
+      executable: /bin/bash
+  register: suicide_threshold
+  when: inventory_hostname in groups['primary-master']
+
+- name: verify if suicide threshold set to 1800
+  assert:
+    that: suicide_threshold.stdout | int == 1800
+    fail_msg: "not updated"
+    success_msg: "updated value = {{ suicide_threshold.stdout }}" 
+  when: inventory_hostname in groups['primary-master']
+
+
+
+
+- name: Disable nfs monitor schedule 
+  shell: source /root/.bash_profile && robin schedule disable "NFS Server" Monitor
+  args:
+      executable: /bin/bash
+  when: inventory_hostname in groups['primary-master']
+
+- name: Fetch nfs monitor schedule status
+  shell: source /root/.bash_profile && robin schedule list --function Monitor --headers Enabled
+  args:
+      executable: /bin/bash
+  register: nfs_server_monitor
+  when: inventory_hostname in groups['primary-master']
+
+- name: verify if NFS server monitor schdule is enabled
+  assert:
+    that: nfs_server_monitor.stdout == 'False'
+    fail_msg: " Failed to Disable NFS server monitor"
+    success_msg: "Disabled value = {{ nfs_server_monitor.stdout }}"
+  when: inventory_hostname in groups['primary-master']
+
+
+
+
+
+- name: Fetch IP from /etc/kubernetes/kubelet.conf
+  shell: cat /etc/kubernetes/kubelet.conf |grep server |awk -F':' '{print $3}'| cut -d'/' -f3
+  register: ip
+  when: inventory_hostname in groups['master']  
+
+- name: Fetch hostname IP 
+  shell: hostname -i
+  register: hostname_ip
+  when: inventory_hostname in groups['master']
+
+- name: debug hostname_ip and ip
+  debug:
+    msg: "{{ hostname_ip.stdout }} {{ ip.stdout }}"
+  when: inventory_hostname in groups['master']
+
+- name: update /etc/kubernetes/kubelet.conf with hostname ip and port 6443
+  shell: | 
+    sed -i 's/{{ ip.stdout}}/{{ hostname_ip.stdout }}/g' /etc/kubernetes/kubelet.conf
+    sed -i 's/36443/6443/g' /etc/kubernetes/kubelet.conf
+    systemctl restart kubelet
+    systemctl status kubelet
+  register: kubelet_status
+  args:
+    executable: /bin/bash  
+  when: inventory_hostname in groups['master'] and ip.stdout != hostname_ip.stdout
+
+- name: debug kubelet status
+  debug:
+    msg: "{{ kubelet_status.stdout }}"
+  when: inventory_hostname in groups['master'] and ip.stdout != hostname_ip.stdout
+
+
+
+
+
+- name: Disable auto-rebalance
+  shell: |
+    source /root/.bash_profile && robin login {{ robin_user }} --password {{ robin_pass }} >/dev/null
+    robin config update server disk_used_space_high_watermark 140
+  args:
+    executable: /bin/bash
+  when: inventory_hostname in groups['primary-master']
+
+- name: fetch auto-rebalance status
+  shell: |
+    source /root/.bash_profile
+    robin config list server disk_used_space_high_watermark --headers Value
+  args:
+    executable: /bin/bash  
+  register: high_water_mark
+  when: inventory_hostname in groups['primary-master']
+
+- name: Verify if auto disk rebalance is disabled
+  assert:
+    that: high_water_mark.stdout | int > 100
+    fail_msg: "auto disk rebalance is not disabled"
+    success_msg: "disabled value = {{ high_water_mark.stdout }}"
+  when: inventory_hostname in groups['primary-master']
+
+
+
+
+
+- name: Disable autopilot for apps
+  shell: |
+    source /root/.bashrc 
+    for app in $(robin app list --header name); do robin ap disable --app $app -y --wait; done
+  args:
+    executable: /bin/bash  
+  when: inventory_hostname in groups['primary-master']
+
+- name: Fetch autopilot status
+  shell: |
+    source /root/.bashrc 
+    for app in $(robin app list --header name); do robin app info $app | grep -i autopilot| cut -d':' -f2; done
+  args:
+    executable: /bin/bash  
+  register: autopilot
+  when: inventory_hostname in groups['primary-master']
+
+- name:  autopilot status for all apps
+  debug:
+    msg: "{{ autopilot.stdout_lines | length }}" 
+  when: inventory_hostname in groups['primary-master']
+
+- name: Capture autopilot status for all robin apps
+  set_fact: 
+    robin_autopilot_status: "{{ autopilot.stdout_lines | map('trim') | select('eq', 'Disabled')| list | length == autopilot.stdout_lines | length }}"
+  when: inventory_hostname in groups['primary-master']
+
+- name: Verify if auto pilot is disabled for app
+  assert:
+    that: robin_autopilot_status == true
+    fail_msg: "auto pilot is not disabled"
+    success_msg: "Disabled value = {{ autopilot.stdout }}"
+  when: inventory_hostname in groups['primary-master']
+
+

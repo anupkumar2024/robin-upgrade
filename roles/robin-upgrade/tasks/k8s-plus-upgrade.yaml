@@ -1,0 +1,14 @@
+- name: K8s plus Upgrade on master
+  shell: cd /root/build/{{ robin_version }} && ./k8splus-script-{{ robin_version }}.sh upgrade --host-type=physical --silent --ip-protocol={{ ip_protocol }}
+  async: 3600
+  poll: 60
+  when: inventory_hostname in groups['primary-master'][0] and upgrade_release_major_version == '5.4.3'
+  tags: [v5.4hf3]
+
+- name: K8s plus Upgrade on master
+  shell: cd /root/build/{{ robin_version }} && ./k8splus-script-{{ robin_version }}.sh upgrade --host-type=physical --silent
+  async: 3600
+  poll: 60
+  when: inventory_hostname in groups['primary-master'][0] and upgrade_release_major_version == '5.5.0'
+  tags: [v5.4hf3]
+

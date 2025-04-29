@@ -1,0 +1,19 @@
+- name: Include common tasks to find the active node
+  include_tasks: find-active-node.yaml
+  name: "k8s post upgrade - active" 
+  tags:
+    - v5.4hf5
+
+- name: K8s Post Upgrade on Active master
+  shell: cd /root/build/{{ robin_version }} && ./k8s-script-{{ os_version }}-{{ robin_version }}.sh post-upgrade --primary-cp-node --host-type=physical --yes --force --silent --ip-protocol={{ ip_protocol }}
+  async: 3600
+  poll: 60
+  when: ansible_facts['fqdn'] == active_node
+  tags: [v5.4hf5]
+
+- name: K8s Post Upgrade on all nodes except Active Master
+  shell: cd /root/build/{{ robin_version }} && ./k8s-script-{{ os_version }}-{{ robin_version }}.sh post-upgrade --host-type=physical --yes --force --silent --ip-protocol={{ ip_protocol }}
+  async: 3600
+  poll: 60
+  when: ansible_facts['fqdn'] != active_node
+  tags: [v5.4hf5]

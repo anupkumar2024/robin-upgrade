@@ -1,0 +1,39 @@
+---
+- name: Apply roles to hosts
+  hosts: all
+  become: yes
+  become_user: root
+  remote_user: "{{ ansible_user }}"
+  become_method: sudo
+  gather_facts: no
+  no_log: false
+  roles: 
+    - role: robin-upgrade
+      tags:
+        - upgrade
+      any_errors_fatal: true  
+
+    - role: artifactory-download
+      tags:
+        - download-robin-bin
+      any_errors_fatal: true 
+
+    - role: robin-precheck
+      tags:
+        - upgrade-precheck
+      ignore_errors: yes  
+
+    - role: cluster-state
+      tags:
+        - capture-cluster-state
+
+    - role: post-upgrade-tasks
+      ignore_errors: yes
+      tags:
+        - postcheck
+        - post-upgrade-tasks-550    
+
+    - role: pre-upgrade-tasks
+      ignore_errors: yes
+      tags:
+        - pre-upgrade-tasks-550    

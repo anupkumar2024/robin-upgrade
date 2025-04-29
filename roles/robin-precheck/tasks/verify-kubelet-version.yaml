@@ -1,0 +1,22 @@
+- name: Run kubelet --version command
+  shell: kubelet --version | awk '{ print $2 }'
+  register: kubelet_version
+
+
+- name: debug kubelet version
+  debug:
+    msg: "{{ kubelet_version.stdout }}"
+
+
+# - name: Replace kubelet binary
+#   shell: |
+#     cd /tmp; curl http://artifactory.robinsystems.com/k8s_pkgs/kubelet-v1.25.7 -o kubelet
+#     systemctl stop kubelet; cp /usr/bin/kubelet /usr/bin/kubelet-bkp; cp /tmp/kubelet /usr/bin/kubelet
+#     systemctl start kubelet
+#   when: kubelet_version.stdout == "v1.25.7"
+
+- name: debug
+  debug:
+    msg: "upadate kubelet binary"
+  when: kubelet_version.stdout == "v1.25.7"
+  

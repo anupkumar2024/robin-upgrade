@@ -1,0 +1,23 @@
+- name: Fetch Active robin jobs list
+  shell: |
+    source /root/.bash_profile && robin login {{ robin_user }} --password {{ robin_pass }} >/dev/null
+    robin job list --state active | awk 'NR>1'
+  args:
+    executable: /bin/bash
+  register: active_jobs
+
+- name: Capture jobs status
+  set_fact:
+    no_active_jobs: "{{ active_jobs.stdout_lines | length == 0 }}"
+    all_active_jobs: "{{ active_jobs.stdout_lines | length != 0 }}"
+
+- name: Check active jobs 
+  fail:
+    msg: "Active jobs are present. Please clear it before proceeding"
+  when: all_active_jobs 
+  ignore_errors: yes      
+
+- name: Check if no active jobs present
+  debug:
+    msg: "No active Jobs present"
+  when: no_active_jobs

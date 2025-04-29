@@ -1,0 +1,15 @@
+- name: Include host post upgrade
+  import_tasks: host-post-upgrade.yaml
+  tags: [v5.4]
+
+- name: Include k8s post upgrade
+  import_tasks: k8s-post-upgrade.yaml
+  tags: [v5.4]
+
+- name: Include k8s plus post upgrade
+  import_tasks: k8s-plus-post-upgrade.yaml
+  tags: [v5.4]
+
+- name: Include robin post upgrade
+  import_tasks: robin-post-upgrade.yaml
+  tags: [v5.4]

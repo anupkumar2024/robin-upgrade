@@ -1,0 +1,23 @@
+- name: Fetch autopilot status
+  shell: |
+    source /root/.bashrc 
+    for app in $(robin app list --header name); do robin app info $app | grep -i autopilot| cut -d':' -f2; done
+  args:
+    executable: /bin/bash  
+  register: autopilot
+ 
+- name:  autopilot status for all apps
+  debug:
+    msg: "{{ autopilot.stdout_lines | length }}" 
+
+- name: Capture autopilot status for all robin apps
+  set_fact: 
+    robin_autopilot_status: "{{ autopilot.stdout_lines | map('trim') | select('eq', 'Disabled')| list | length == autopilot.stdout_lines | length }}"
+
+
+- name: Verify if auto pilot is disabled for app
+  assert:
+    that: robin_autopilot_status == true
+    fail_msg: "auto pilot is not disabled. Disable it before proceeding"
+    success_msg: "passed"
+
