@@ -1,6 +1,20 @@
 ---
 # tasks file for robin-pre-check
 
+- name: verify md5sum of all the files before upgrade
+  debug:
+    msg: "verify md5sum of all the files before upgrade"
+  tags: pre-check   
+
+- name: locate robin binaries
+  import_tasks: locate-robin-bin.yaml
+  tags: pre-check
+
+- name: Import Robin license expiry check 
+  import_tasks: license-check.yaml
+  tags: pre-check
+  when: inventory_hostname in groups['primary-master']
+
 - name: Import file system check
   import_tasks: filesystem-check.yaml
   tags: pre-check
@@ -54,15 +68,15 @@
   import_tasks: extra-checks.yaml
   tags: pre-check
 
-- name: Import kubelet checks
-  import_tasks: verify-kubelet-version.yaml
-  tags: pre-check
-  when: current_robin_version == '5.4.3-564'
+# - name: Import kubelet checks
+#   import_tasks: verify-kubelet-version.yaml
+#   tags: pre-check
+#   when: current_robin_version == '5.4.3-564'
 
-- name: Import robin db checks
-  import_tasks: robin-db-ldap-check.yaml
-  tags: pre-check
-  when: inventory_hostname in groups['primary-master'] and current_robin_version == '5.4.3-564'
+# - name: Import robin db checks
+#   import_tasks: robin-db-ldap-check.yaml
+#   tags: pre-check
+#   when: inventory_hostname in groups['primary-master'] and current_robin_version == '5.4.3-564'
 
 - name: Import robin config check
   import_tasks: robin-config-suicide-check.yaml
@@ -74,10 +88,10 @@
   tags: pre-check
   when: inventory_hostname in groups['primary-master'] and current_robin_version == '5.4.3-564'
 
-- name: Import kubelet.conf check for IP
-  import_tasks: kubelet-ip-check.yaml
-  tags: pre-check
-  when: inventory_hostname in groups['master'] and current_robin_version == '5.4.3-564'
+# - name: Import kubelet.conf check for IP
+#   import_tasks: kubelet-ip-check.yaml
+#   tags: pre-check
+#   when: inventory_hostname in groups['master'] and current_robin_version == '5.4.3-564'
 
 - name: Import hungmounts check 
   import_tasks: hungmountscheck.yaml
@@ -92,3 +106,67 @@
   import_tasks: autopilot-check.yaml
   tags: pre-check
   when: inventory_hostname in groups['primary-master']
+
+- name: Import time drift check 
+  import_tasks: time-drift-check-nodes.yaml
+  tags: pre-check
+
+- name: Verify if cert manager is not running 
+  debug:
+    msg: "Verify if cert manager are not running in the cluster for HF5 to 5.5.0 upgrade only"
+  tags: pre-check    
+  when: inventory_hostname in groups['primary-master']
+
+- name: Paused
+  ansible.builtin.pause:
+    prompt: "Press Enter to continue..."
+
+- name: No new pods created during upgrade
+  debug:
+    msg: "Make sure no new apps, pods or jobs are created during the upgrade of CNP cluster, it can impact upgrade as control plane will be upgraded. 
+        Also, during upgrade if there are very high I/Os going on to a single replica volume and as part of upgrade IOMGR is restarted , 
+        this might result in I/O errors at FS and application. It might  require fsck check. 
+        This is expected and it is suggested to stop such apps before upgrade if possible"
+  tags: pre-check
+  when: inventory_hostname in groups['primary-master']
+
+- name: Paused
+  ansible.builtin.pause:
+    prompt: "Press Enter to continue..."
+
+- name: Preentry.sh check
+  debug:
+    msg: "Check for any pre-entry script files present in the /usr/local/robin on the master or worker nodes. 
+          Make sure the script does not over-write any upgraded files/libraries via this script in robin master or worker nodes. 
+          Else this will impact during the upgrade"
+  tags: pre-check
+  when: inventory_hostname in groups['primary-master'] 
+
+- name: Paused
+  ansible.builtin.pause:
+    prompt: "Press Enter to continue..."
+
+- name: NFS pods Toleration check
+  debug:
+    msg: " Check if toleration seconds for all NFS server Pods set to 86400 seconds. 
+           After upgrade, you must change the tolerations seconds according to the post-upgrade steps."
+  tags: pre-check
+  when: inventory_hostname in groups['primary-master']         
+
+- name: Master pods toleration check
+  import_tasks: master-pods-toleration-check.yaml
+  tags: pre-check
+  when: inventory_hostname in groups['primary-master'] and current_robin_version == '5.4.3-564'
+
+- name: Paused
+  ansible.builtin.pause:
+    prompt: "Press Enter to continue..."
+
+- name: pod max pids check
+  debug:
+    msg: "Verify the pod-max-pids configured on the master nodes in kubelet. 
+          Depedning on the number of vCPU’s on the host, we should keep a value of pod-max-pids to atleast 4096 on master nodes. 
+          Please note if the value is more than 4096 already based on the app requirements ( ex. 10000 ) , 
+          it’s not required to be changed. Do verify the value before changing it. This can be tuned further based on the cluster observations"
+  tags: pre-check
+  when: inventory_hostname in groups['primary-master']        

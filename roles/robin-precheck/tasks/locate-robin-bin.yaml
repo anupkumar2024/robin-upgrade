@@ -1,0 +1,14 @@
+- name: Check if /root/build/robin exists
+  ansible.builtin.stat:
+    path: /root/build/{{ upgrade_release_major_version }}-{{ build }}
+  register: folder_stat
+
+- name: Robin packages does not exist
+  ansible.builtin.fail:
+    msg: "/root/build/{{ upgrade_release_major_version }}-{{ build }} does not exist. Download before upgrade"
+  when: not (folder_stat.stat.exists and folder_stat.stat.isdir)
+
+- name: Robin package exists
+  ansible.builtin.debug:
+    msg: "Robin package exists in /root/build/{{ upgrade_release_major_version }}-{{ build }}."
+  when: folder_stat.stat.exists and folder_stat.stat.isdir

@@ -1,0 +1,12 @@
+- name: Fetch master pod toleration value
+  shell: | 
+    kubectl get pod -n robinio $(kubectl get pods -n robinio -l app=robin-master -o jsonpath='{.items[*].metadata.name}') -oyaml|grep -w "tolerationSeconds: 600"
+  args:
+    executable: /bin/bash  
+  register: tolerations
+
+- name: Verify if master pod toleration value is set to 600 sec
+  assert:
+    that: tolerations.rc == 0
+    fail_msg: "master pod toleration value is not set to 600 sec. Set it before proceeding"
+    success_msg: "passed"

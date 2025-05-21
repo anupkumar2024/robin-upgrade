@@ -1,0 +1,18 @@
+- name: Fetch license status
+  shell: |
+    source /root/.bashrc 
+    robin license info | grep Status | grep EXPIRED
+  args:
+    executable: /bin/bash
+  ignore_errors: true    
+  register: license_status
+  tags:
+    - pre-check
+
+- name: Check Robin license expiry
+  when: inventory_hostname in groups['primary-master'][0]
+  assert:
+    that: license_status.rc != 0
+    msg: "Your ROBIN License has EXPIRED.Renew it before proceeding for upgrade"
+  tags:
+    - pre-check  

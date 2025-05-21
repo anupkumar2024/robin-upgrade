@@ -3,8 +3,7 @@
 - name: Login to robin cluster
   shell: /root/bin/robin login {{ robin_user  }} --password {{ robin_pass }}
   when: inventory_hostname in groups['primary-master'][0]
-  tags:
-    - pre-check
+  
 
 
 - name: Check All hosts online
@@ -12,32 +11,28 @@
   when: inventory_hostname in groups['primary-master'][0]
   register: host_online_result
   ignore_errors: true
-  tags:
-    - pre-check
+  
 
 - name: Verify All hosts online
   when: inventory_hostname in groups['primary-master'][0]
   assert:
     that: host_online_result.rc == 1
     msg: "Some hosts have been found to be in OFFLINE state, Check that all hosts are in ONLINE state before proceeding"
-  tags:
-    - pre-check
+  
 
 - name: Check Collections are online
   when: inventory_hostname in groups['primary-master'][0]
   shell: /root/bin/robin collection list  |grep Online | grep -q READY
   register: collection_output
   changed_when: false
-  tags:
-   - pre-check
+  
 
 - name: Verify no offline collections\
   when: inventory_hostname in groups['primary-master'][0]
   assert:
     that: collection_output.rc == 0
     msg: "Some collections are not in READY or ONLINE state. Please check and verify before proceeding"
-  tags:
-   - pre-check
+  
 
 
 - name: Check All disks are online
@@ -45,16 +40,14 @@
   when: inventory_hostname in groups['primary-master'][0]
   register: host_disk_result
   ignore_errors: true
-  tags:
-    - pre-check
+  
 
 - name: Verify All disks are online
   when: inventory_hostname in groups['primary-master'][0]
   assert:
     that: host_disk_result.rc != 0
     msg: "Some disks have been found to be not ONLINE state, Check that all disks are in ONLINE state before proceeding"
-  tags:
-    - pre-check
+  
 
 - name: Check All pods are running
   #shell: /bin/kubectl get pods -A | grep -vi running
@@ -62,8 +55,7 @@
   when: inventory_hostname in groups['primary-master'][0]
   register: pod_result
   ignore_errors: true
-  tags:
-    - pre-check
+  
 
 - name: Verify All pods are running
   when: inventory_hostname in groups['primary-master'][0]
@@ -71,20 +63,18 @@
   assert:
     that: pod_result.rc != 0
     msg: 'Warning: some pods are not in Running state'
-  tags:
-    - pre-check
+  
 
 - name: Check Active jobs
   when: inventory_hostname in groups['primary-master'][0]
   shell: /root/bin/robin job list --state active | wc -l | grep 1
   register: job_output
   #changed_when: false
-  tags:
-   - pre-check
+  
 
 - debug: var=job_output
   when: inventory_hostname in groups['primary-master'][0]
-  tags: pre-check
+  
 
 
 - name: Verify no active jobs
@@ -92,8 +82,7 @@
     that: job_output.rc == 0
     msg: "Active jobs available. Clear jobs before proceeding"
   when: inventory_hostname in groups['primary-master'][0]
-  tags:
-   - pre-check
+  
 
 # - name: "Copy XLOG file"
 #   template:

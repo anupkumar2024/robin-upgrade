@@ -19,7 +19,7 @@
     executable: /bin/bash
   register: primary_master 
 
-- name: debug
+- name: list nodes
   debug:
     msg: "{{ master_nodes.stdout_lines }} and {{ worker_nodes.stdout_lines }} and {{ primary_master.stdout_lines }}"
 

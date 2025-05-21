@@ -1,11 +1,12 @@
 ---
 # tasks file for pre-upgrade-tasks
+
 - name: Import pre upgrade tasks
   import_tasks: pre-upgrade-tasks.yaml
   tags: pre-upgrade-tasks
 
 
-- name: Import pre upgrade db tasks
-  import_tasks: db-update.yaml
-  tags: pre-upgrade-tasks
-  when: inventory_hostname in groups['primary-master']
+# - name: Import pre upgrade db tasks
+#   import_tasks: db-update.yaml
+#   tags: pre-upgrade-tasks
+#   when: inventory_hostname in groups['primary-master']

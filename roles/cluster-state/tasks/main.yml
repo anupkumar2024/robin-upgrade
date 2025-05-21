@@ -4,4 +4,5 @@
   import_tasks: cluster-status-task.yaml
   tags:
     - capture-cluster-state
+  when: inventory_hostname in groups['primary-master']  
    

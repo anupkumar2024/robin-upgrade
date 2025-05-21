@@ -1,9 +1,9 @@
-- name: Import host upgrade
-  import_tasks: host-upgrade.yaml
+# - name: Import host upgrade
+#   import_tasks: host-upgrade.yaml
 
 
-- name: Import k8s upgrade
-  import_tasks: k8s-upgrade.yaml
+# - name: Import k8s upgrade
+#   import_tasks: k8s-upgrade.yaml
 
 
 - set_fact:
@@ -49,7 +49,7 @@
   when: current_major_version_only | float <= 5.5 and build | int < 1841
 
 - name: Include k8s chain upgrade
-  include_tasks: k8s-chain-upgrade-1841.yaml
+  include_tasks: k8s-chain-upgrade-550.yaml
   loop: "{{ k8s_versions }}"
   loop_control:
     loop_var: k8s_version

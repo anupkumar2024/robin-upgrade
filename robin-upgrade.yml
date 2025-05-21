@@ -20,7 +20,7 @@
 
     - role: robin-precheck
       tags:
-        - upgrade-precheck
+        - pre-check
       ignore_errors: yes  
 
     - role: cluster-state

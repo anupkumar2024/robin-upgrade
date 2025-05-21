@@ -1,0 +1,44 @@
+- name: Get current time on the reference node
+  command: date +%s.%N
+  register: reference_time_output
+  delegate_to: "{{ groups['primary-master'][0] }}"
+  delegate_facts: true
+  
+
+- name: display reference time
+  debug:
+    msg: "{{ reference_time_output.stdout }}"
+  when: inventory_hostname == groups['primary-master'][0]  
+
+- name: Get current time on the node
+  command: date +%s.%N
+  register: remote_time
+
+
+- name: Calculate time difference
+  shell: |
+      diff=$(echo "{{ remote_time.stdout }} - {{ reference_time_output.stdout }}" | bc)
+      echo "$diff"
+  args:
+    executable: /bin/bash
+  register: time_diff
+  when: inventory_hostname not in groups['primary-master'][0]  # Check against the reference node
+  delegate_to: "{{ groups['primary-master'][0] }}"      # Delegate to the reference node
+  #run_once: true
+
+
+- name: verify if time difference exceeds threshold (in seconds)
+  fail:
+    msg: "Time drift detected on {{ inventory_hostname }}: {{ time_diff.stdout | float }} seconds difference from {{ groups['primary-master'][0] }}"
+  when:
+    - inventory_hostname != groups['primary-master'][0]  # Check against the reference node
+    - time_diff.stdout is defined
+    - time_diff.stdout | float | abs > 2  # Adjust the threshold as needed
+
+
+- name: Display time difference (for non-reference nodes)
+  debug:
+    msg: "Time difference on {{ inventory_hostname }} from {{ groups['primary-master'][0] }}: {{ time_diff.stdout | float }} seconds"
+  when:
+    - inventory_hostname != groups['primary-master'][0]  # Check against the reference node
+    - time_diff.stdout is defined
