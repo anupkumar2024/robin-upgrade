@@ -56,9 +56,9 @@ ansible-playbook robin-upgrade.yml --list-tags
 ansible-playbook robin-upgrade.yml -u root --ask-pass --skip-tags k8s-script-install-all-worker,k8s-script-install-primary,k8splus-script-install-primary --extra-vars "@config.yaml"
 
 ## Adhoc command
+
 ```
 ansible all -m ansible.builtin.yum -a "name=bind-utils state=present" -u root  --ask-pass
-```
 ansible all -m shell -a "echo 'anupkumar:test123' | chpasswd" -u root --ask-pass
 ```
 
@@ -68,17 +68,16 @@ ansible-playbook robin-upgrade.yml  --ask-pass --ask-become-pass -u anupkumar   
 
 # For macos:
 ## Install python3  and run below cmds
+
 ```
 pip install ansible
-```
 pip install paramiko
 ```
 
 ## Use ansible cmds as belwow from macos:
+
 ```
 ansible-playbook robin-upgrade.yml -c paramiko --ask-pass --tags non-ha-install --extra-vars "@config.yaml"
-```
 ansible all -m ansible.builtin.yum -a "name=bind-utils state=present" -u root  --ask-pass -c paramiko
-```
 ansible all -m shell -a uptime  -u root --ask-pass
 ```
