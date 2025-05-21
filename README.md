@@ -5,11 +5,11 @@
 # Examples
 
 ## Set up ansible
-'''
+```
 Install python 3.9
 pip3 install ansible
 pip3 install paramiko
-'''
+```
    
 ## To download robin binaries
 1. Update config.yaml file in main dir
