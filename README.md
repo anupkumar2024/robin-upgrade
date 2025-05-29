@@ -1,21 +1,24 @@
-# Ansible to upgrade|precheck|postcheck for Robin CNP Platform 
+# Ansible to upgrade|precheck|postcheck for Robin CNP Platform
+# Upgrade from older version(5.3.x) is not supported
+
 ## Make sure ansible,python,pip is installed on the control node
 ## Update host details on inventory/hosts.ini file. 
 
-# Examples
+## Examples
 
 ## Set up ansible
 ```
 Install python 3.9
 pip3 install ansible
 pip3 install paramiko
+create ansible user in all the nodes if not present with sudo access.
 ```
    
 ## To download robin binaries
 ```
 1. Update config.yaml file in main dir
 2. Run ansible cmd:
-   -ask-become-pass option sudo access
+   -ask-become-pass option used for sudo access
    ansible-playbook robin-upgrade.yml  --ask-pass --ask-become-pass --tags download-robin-bin --extra-vars "@config.yaml" -c paramiko
 3. If passwordless authentication is enabled
    ansible-playbook robin-upgrade.yml --tags download --extra-vars "@config.yaml"
