@@ -2,35 +2,19 @@
   shell: ps axl | awk '{ if ($10 ~ /Z/) print $0 }'
   register: zombie_processes
 
-- name: capture defunct processes
+- name: capture D states processes
   shell: ps axl | awk '{ if ($10 ~ /D/) print $0 }'
-  register: defunct_processes
+  register: D_processes
 
-- name: Set facts for zombie and defunct processes
+- name: Set facts for zombie and D processes
   set_fact:
     zombie_process_list: "{{ zombie_processes.stdout_lines }}"
-    defunct_process_list: "{{ defunct_processes.stdout_lines }}"
+    D_process_list: "{{ D_processes.stdout_lines }}"
 
-# - name: check zombie processes 
-#   fail:
-#     msg: "Zombie processes found:"
-#   when: zombie_process_list | length > 0
-#   ignore_errors: yes
 
-# - name:  check defunct processes
-#   fail:
-#     msg: "Defunct processes found:"
-#   when: defunct_process_list | length > 0
-#   ignore_errors: yes
-
-# - name: no zombie or defunct processes are found
-#   debug:
-#     msg: "No zombie or defunct processes found."
-#   when: zombie_process_list | length == 0 and defunct_process_list | length == 0
-
-- name: Check if Zombie or Defunct process exists
+- name: Check if Zombie or process in D states exists
   assert:
     that:
-      - zombie_process_list | length == 0 and defunct_process_list | length == 0
-    fail_msg: "zombie or defunct processes found in {{ inventory_hostname }} ."
-    success_msg: "No zombie or defunct processes found in {{ inventory_hostname }}."
+      - zombie_process_list | length == 0 and D_process_list | length == 0
+    fail_msg: "zombie or processes in D states found in {{ inventory_hostname }}."
+    success_msg: "No zombie or processes in D states found in {{ inventory_hostname }}."

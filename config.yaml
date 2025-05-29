@@ -4,7 +4,7 @@
 artifactory_url: http://builds.robinsystems.com:8080/job/Robin_5.5.0_Binary/1852/artifact/artifacts/
 build: 1852
 robin_version: 5.5.0-1852 #used for upgrade and download robin binaries
-os_version: el8 
+os_version: el7
 artifactory_folder: /root/build/
 robin_user: admin
 robin_pass: Robin123

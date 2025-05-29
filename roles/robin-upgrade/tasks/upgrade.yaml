@@ -1,9 +1,9 @@
-# - name: Import host upgrade
-#   import_tasks: host-upgrade.yaml
+- name: Import host upgrade
+  import_tasks: host-upgrade.yaml
 
 
-# - name: Import k8s upgrade
-#   import_tasks: k8s-upgrade.yaml
+- name: Import k8s upgrade
+  import_tasks: k8s-upgrade.yaml
 
 
 - set_fact:
